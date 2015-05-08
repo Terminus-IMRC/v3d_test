@@ -5,6 +5,23 @@
 #include <string.h>
 #include <unistd.h>
 
+static char *progname = NULL;
+static _Bool is_wanted_exit = 0;
+
+void usage()
+{
+	printf("Usage: read: %s -r -n REGISTER_NAME\n", progname);
+	printf("       write: %s -w VALUE -n REGISTER_NAME\n", progname);
+	printf("Read value from V3D register REGISTER_NAME.\n");
+	printf("Or write value VALUE to V3D register REGISTER_NAME.\n");
+}
+
+void exit_handler()
+{
+	if (!is_wanted_exit)
+		usage();
+}
+
 int main(int argc, char *argv[])
 {
 	int opt;
@@ -15,6 +32,10 @@ int main(int argc, char *argv[])
 	} rw = E_NA;
 	v3d_field_name_t reg;
 	uint32_t val = 0;
+
+	progname = argv[0];
+
+	atexit(exit_handler);
 
 	while ((opt = getopt(argc, argv, "rw:n:")) != -1) {
 		switch (opt) {
@@ -79,5 +100,6 @@ int main(int argc, char *argv[])
 	unmapmem_cpu(v3d_p, V3D_LENGTH);
 	v3d_finalize();
 
+	is_wanted_exit = !0;
 	return 0;
 }
